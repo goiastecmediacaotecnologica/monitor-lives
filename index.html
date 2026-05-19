@@ -35,7 +35,7 @@
   .loading-bar { width:220px; height:2px; background:var(--surface2); border-radius:2px; overflow:hidden; }
   .loading-bar-fill { height:100%; width:0%; background:var(--accent); border-radius:2px; transition:width 0.4s ease; }
   .loading-msg { font-family:var(--mono); font-size:12px; color:var(--text-muted); letter-spacing:0.06em; animation:blink 1.2s infinite; }
-  .loading-error { font-family:var(--mono); font-size:12px; color:var(--red); text-align:center; max-width:380px; line-height:1.7; display:none; padding:0 20px; }
+  .loading-error { font-family:var(--mono); font-size:12px; color:var(--red); text-align:center; max-width:400px; line-height:1.8; display:none; padding:0 20px; }
   .btn-retry { margin-top:14px; background:transparent; border:1px solid var(--red); color:var(--red); font-family:var(--mono); font-size:11px; padding:7px 20px; border-radius:5px; cursor:pointer; transition:all 0.15s; }
   .btn-retry:hover { background:rgba(226,75,74,0.1); }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
@@ -69,7 +69,7 @@
   .status-bar { display:flex; align-items:center; justify-content:space-between; padding:7px 22px; background:var(--surface2); border-bottom:1px solid var(--border); }
   .status-left { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; color:var(--text-muted); }
   .status-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-  .status-cota { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+  .status-right { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
 
   .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; padding:14px 22px 22px; }
   @media(max-width:1200px){.grid{grid-template-columns:repeat(3,1fr)}}
@@ -97,6 +97,7 @@
   .card-header { display:flex; align-items:flex-start; justify-content:space-between; }
   .card-title { font-size:14px; font-weight:500; }
   .card-shift { font-family:var(--mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; }
+  .card-video-title { font-size:10px; color:var(--text-dim); font-family:var(--mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   .vol-bar { display:flex; align-items:center; gap:6px; }
   .vol-label { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.06em; width:20px; }
@@ -157,7 +158,7 @@
       <div class="clock" id="clock">--:--:--</div>
       <button class="btn-refresh" id="btnRefresh" onclick="atualizarLives()">
         <svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>
-        Atualizar lives
+        Atualizar
       </button>
     </div>
   </header>
@@ -174,16 +175,14 @@
       <div class="status-dot"></div>
       <span id="statusText">—</span>
     </div>
-    <div class="status-cota" id="statusCota"></div>
+    <div class="status-right" id="statusRight">Sem limite de cota — via RSS</div>
   </div>
 
   <div class="grid" id="grid"></div>
-  <footer>Centro de Mídias — Monitor de transmissões ao vivo &nbsp;|&nbsp; Clique em "Atualizar lives" para verificar novos canais</footer>
+  <footer>Centro de Mídias — Monitor de transmissões ao vivo &nbsp;|&nbsp; Via RSS · Sem limite de uso</footer>
 </div>
 
 <script>
-const API_KEY = 'AIzaSyCe3wlSYD6SUiekWxkeIi1671DQF8lUxcI';
-
 const CHANNELS = [
   { id: 'ch1', label: '8º Ano',   channelId: 'UCB0MTJaJAkX4cKC9vhcFNvw' },
   { id: 'ch2', label: '9º Ano',   channelId: 'UCJim7HUhrxwZTP_7zCDUWeg' },
@@ -192,10 +191,13 @@ const CHANNELS = [
   { id: 'ch5', label: '3ª Série', channelId: 'UC3MKYCEnPR1NDayp7TQwMmg' },
 ];
 
+// Proxy público para contornar CORS no RSS
+const PROXY = 'https://api.allorigins.win/get?url=';
+
 let turnoAtivo = 'Matutino';
 let ouvidoId   = null;
-const videoIds = {};
-let totalBuscas = 0; // conta quantas buscas foram feitas hoje
+const videoIds  = {};
+const videoTitles = {};
 
 const SVG_OUVIR = `<svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>`;
 const SVG_MUDO  = `<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M17 3l4 4-8 8H9v-4L17 3z"/></svg>`;
@@ -213,13 +215,26 @@ async function iniciar() {
   await buscarTodasLives(true);
 }
 
-// ── API ──
-async function buscarLive(channelId) {
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${API_KEY}`;
-  const res  = await fetch(url);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message + ' (código ' + data.error.code + ')');
-  return (data.items && data.items.length > 0) ? data.items[0].id.videoId : null;
+// ── RSS ──
+async function buscarLiveRSS(channelId) {
+  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+  const proxyUrl = PROXY + encodeURIComponent(rssUrl);
+
+  const res  = await fetch(proxyUrl);
+  const json = await res.json();
+  const xml  = new DOMParser().parseFromString(json.contents, 'text/xml');
+
+  const entries = xml.querySelectorAll('entry');
+  if (!entries.length) return null;
+
+  // Pega o vídeo mais recente
+  const first   = entries[0];
+  const videoId = first.querySelector('videoId')?.textContent
+                  || first.querySelector('id')?.textContent?.split(':').pop();
+  const title   = first.querySelector('title')?.textContent || '';
+
+  if (!videoId) return null;
+  return { videoId, title };
 }
 
 async function buscarTodasLives(primeiraVez = false) {
@@ -227,35 +242,39 @@ async function buscarTodasLives(primeiraVez = false) {
   if (btn) { btn.disabled = true; btn.innerHTML = SVG_SPIN + ' Buscando...'; }
 
   let encontrados = 0;
-  try {
-    for (let i = 0; i < CHANNELS.length; i++) {
-      const ch = CHANNELS[i];
-      setProgress(10 + ((i + 1) / CHANNELS.length) * 80);
-      if (!primeiraVez) setPlaceholder(ch.id, 'loading');
-      const vid = await buscarLive(ch.channelId);
-      videoIds[ch.id] = vid;
-      if (vid) encontrados++;
+  let erros = 0;
+
+  for (let i = 0; i < CHANNELS.length; i++) {
+    const ch = CHANNELS[i];
+    setProgress(10 + ((i + 1) / CHANNELS.length) * 80);
+    if (!primeiraVez) setPlaceholder(ch.id, 'loading');
+
+    try {
+      const result = await buscarLiveRSS(ch.channelId);
+      if (result) {
+        videoIds[ch.id]    = result.videoId;
+        videoTitles[ch.id] = result.title;
+        encontrados++;
+      } else {
+        videoIds[ch.id]    = null;
+        videoTitles[ch.id] = '';
+      }
+    } catch(e) {
+      videoIds[ch.id]    = null;
+      videoTitles[ch.id] = '';
+      erros++;
     }
-    totalBuscas++;
-    // cota: cada busca = 5 canais × 100 unidades = 500 unidades
-    const cotaUsada = totalBuscas * 500;
-    const cotaRestante = 10000 - cotaUsada;
-    atualizarCota(cotaRestante);
-  } catch(e) {
-    if (primeiraVez) {
-      document.getElementById('loadMsg').style.display = 'none';
-      document.getElementById('loadErrorMsg').textContent = 'Erro ao acessar a API do YouTube: ' + e.message;
-      document.getElementById('loadError').style.display = 'block';
-      return;
-    }
-    setStatus('Erro ao atualizar: ' + e.message);
-    if (btn) { btn.disabled = false; btn.innerHTML = SVG_SPIN + ' Atualizar lives'; }
-    return;
   }
 
   setProgress(100);
 
   if (primeiraVez) {
+    if (erros === CHANNELS.length) {
+      document.getElementById('loadMsg').style.display = 'none';
+      document.getElementById('loadErrorMsg').textContent = 'Não foi possível acessar o RSS do YouTube. Verifique sua conexão e tente novamente.';
+      document.getElementById('loadError').style.display = 'block';
+      return;
+    }
     setTimeout(() => {
       document.getElementById('loading-screen').style.display = 'none';
       document.getElementById('monitor-screen').style.display = 'block';
@@ -263,18 +282,15 @@ async function buscarTodasLives(primeiraVez = false) {
       atualizarStatus(encontrados);
     }, 300);
   } else {
+    ouvidoId = null;
     atualizarPlayers();
     atualizarStatus(encontrados);
   }
 
-  if (btn) {
-    btn.disabled = false;
-    btn.innerHTML = SVG_SPIN + ' Atualizar lives';
-  }
+  if (btn) { btn.disabled = false; btn.innerHTML = SVG_SPIN + ' Atualizar'; }
 }
 
 async function atualizarLives() {
-  ouvidoId = null;
   await buscarTodasLives(false);
 }
 
@@ -283,17 +299,19 @@ function renderGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
   CHANNELS.forEach(ch => {
-    const vid  = videoIds[ch.id];
-    const card = document.createElement('div');
+    const vid   = videoIds[ch.id];
+    const title = videoTitles[ch.id] || '';
+    const card  = document.createElement('div');
     card.className = 'channel-card'; card.id = 'card-' + ch.id;
     const segs = Array.from({length:10},(_,i)=>`<div class="vol-seg" id="seg-${ch.id}-${i}"></div>`).join('');
+
     card.innerHTML = `
       <div class="player-wrapper" id="wrap-${ch.id}">
         ${vid
           ? `<iframe id="iframe-${ch.id}"
                src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&rel=0&modestbranding=1"
                allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-          : `<div class="ph" id="ph-${ch.id}">${SVG_OFF}<span>SEM LIVE AGORA</span></div>`
+          : `<div class="ph" id="ph-${ch.id}">${SVG_OFF}<span>SEM VÍDEO</span></div>`
         }
         <div class="player-overlay"></div>
         <div class="badge-live" id="badge-${ch.id}" style="${vid?'display:flex':'display:none'}">
@@ -306,9 +324,10 @@ function renderGrid() {
           <div class="card-title">${ch.label}</div>
           <div class="card-shift">${turnoAtivo}</div>
         </div>
+        ${title ? `<div class="card-video-title" title="${title}">${title}</div>` : ''}
         <div class="vol-bar"><div class="vol-label">VOL</div><div class="vol-segs">${segs}</div></div>
         <button class="btn-listen" id="btn-${ch.id}" onclick="ouvirCanal('${ch.id}')" ${!vid?'disabled':''}>
-          ${vid ? SVG_MUDO+' Ouvir' : SVG_OFF+' Sem live'}
+          ${vid ? SVG_MUDO+' Ouvir' : SVG_OFF+' Sem vídeo'}
         </button>
         <a class="yt-link ${vid?'':'disabled'}" id="link-${ch.id}"
            href="${vid?'https://www.youtube.com/watch?v='+vid:'#'}" target="_blank">
@@ -322,6 +341,7 @@ function renderGrid() {
 function atualizarPlayers() {
   CHANNELS.forEach(ch => {
     const vid    = videoIds[ch.id];
+    const title  = videoTitles[ch.id] || '';
     const muted  = ch.id !== ouvidoId;
     const wrap   = document.getElementById('wrap-'  + ch.id);
     const badge  = document.getElementById('badge-' + ch.id);
@@ -329,6 +349,7 @@ function atualizarPlayers() {
     const btn    = document.getElementById('btn-'   + ch.id);
     const link   = document.getElementById('link-'  + ch.id);
     const card   = document.getElementById('card-'  + ch.id);
+    const titleEl= card?.querySelector('.card-video-title');
     if (!wrap) return;
 
     const old = document.getElementById('iframe-' + ch.id);
@@ -346,18 +367,20 @@ function atualizarPlayers() {
       wrap.insertBefore(iframe, wrap.firstChild);
       if (badge) badge.style.display = 'flex';
       if (mutedB) mutedB.style.display = '';
-      if (btn) { btn.disabled = false; btn.className = 'btn-listen' + (!muted?' active':''); btn.innerHTML = !muted ? SVG_OUVIR+' Ouvindo' : SVG_MUDO+' Ouvir'; }
+      if (btn) { btn.disabled = false; btn.className = 'btn-listen'+(muted?'':' active'); btn.innerHTML = muted ? SVG_MUDO+' Ouvir' : SVG_OUVIR+' Ouvindo'; }
       if (link) { link.href = 'https://www.youtube.com/watch?v='+vid; link.classList.remove('disabled'); }
+      if (titleEl) { titleEl.textContent = title; titleEl.title = title; }
     } else {
       const phDiv = document.createElement('div');
       phDiv.className = 'ph'; phDiv.id = 'ph-' + ch.id;
-      phDiv.innerHTML = SVG_OFF + '<span>SEM LIVE AGORA</span>';
+      phDiv.innerHTML = SVG_OFF + '<span>SEM VÍDEO</span>';
       wrap.insertBefore(phDiv, wrap.firstChild);
       if (badge) badge.style.display = 'none';
       if (mutedB) mutedB.style.display = 'none';
-      if (btn) { btn.disabled = true; btn.className = 'btn-listen'; btn.innerHTML = SVG_OFF+' Sem live'; }
+      if (btn) { btn.disabled = true; btn.className = 'btn-listen'; btn.innerHTML = SVG_OFF+' Sem vídeo'; }
       if (link) { link.href = '#'; link.classList.add('disabled'); }
       if (card && ouvidoId === ch.id) { card.classList.remove('listening'); ouvidoId = null; }
+      if (titleEl) titleEl.textContent = '';
     }
     atualizarVolBars(ch.id, ch.id === ouvidoId);
   });
@@ -370,10 +393,8 @@ function setPlaceholder(chId, state) {
   if (old) old.remove();
   let ph = document.getElementById('ph-' + chId);
   if (!ph) { ph = document.createElement('div'); ph.id = 'ph-' + chId; wrap.insertBefore(ph, wrap.firstChild); }
-  ph.className = 'ph' + (state === 'loading' ? ' loading' : '');
-  ph.innerHTML = state === 'loading'
-    ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg><span>ATUALIZANDO...</span>`
-    : SVG_OFF + '<span>SEM LIVE AGORA</span>';
+  ph.className = 'ph loading';
+  ph.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg><span>BUSCANDO...</span>`;
 }
 
 // ── Áudio ──
@@ -411,17 +432,14 @@ function setStatus(msg) {
 }
 
 function atualizarStatus(encontrados) {
+  const agora = new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('statusRight').textContent = `Última busca: ${agora} · RSS · Sem limite`;
   const ch = ouvidoId ? CHANNELS.find(c => c.id === ouvidoId) : null;
   setStatus(encontrados === 0
-    ? 'Nenhuma live encontrada. Clique em "Atualizar lives" quando as transmissões iniciarem.'
+    ? 'Nenhum vídeo encontrado. Os canais podem estar offline agora.'
     : ch
-      ? `▶ Ouvindo: ${ch.label} — ${turnoAtivo}. ${encontrados} de ${CHANNELS.length} canais ao vivo.`
-      : `${encontrados} de ${CHANNELS.length} canais ao vivo. Clique em "Ouvir" para monitorar.`);
-}
-
-function atualizarCota(restante) {
-  const el = document.getElementById('statusCota');
-  if (el) el.textContent = `Cota API: ~${restante.toLocaleString()} unidades restantes hoje`;
+      ? `▶ Ouvindo: ${ch.label} — ${turnoAtivo}. ${encontrados} de ${CHANNELS.length} canais encontrados.`
+      : `${encontrados} de ${CHANNELS.length} canais com vídeo. Clique em "Ouvir" para monitorar.`);
 }
 
 function setProgress(pct) {
