@@ -276,9 +276,9 @@ function criarPlayer(chId, videoId) {
   const fazer = () => {
     players[chId] = new YT.Player('player-div-' + chId, {
       videoId,
-      playerVars: { autoplay:1, mute:1, rel:0, modestbranding:1, playsinline:1 },
+      playerVars: { autoplay:1, mute:1, rel:0, modestbranding:1, playsinline:1, enablejsapi:1 },
       events: {
-        onReady(e) { e.target.mute(); }
+        onReady(e) { e.target.setVolume(0); }
       }
     });
   };
@@ -290,7 +290,7 @@ function criarPlayer(chId, videoId) {
 function mutar(chId, muted) {
   const p = players[chId];
   if (!p || typeof p.mute !== 'function') return;
-  try { muted ? p.mute() : p.unMute(); } catch(e){}
+  try { if (muted) { p.setVolume(0); } else { p.setVolume(100); p.unMute(); } } catch(e){}
 }
 
 // ═══════════════════════════════════════
