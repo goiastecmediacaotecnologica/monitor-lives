@@ -86,32 +86,28 @@
   .channel-card.listen-all { border-color:var(--amber);  box-shadow:0 0 0 1px rgba(245,158,11,.25),0 0 20px rgba(245,158,11,.12); }
 
   .player-wrapper { position:relative; width:100%; padding-top:56.25%; background:#000; overflow:hidden; }
-
-  /* iframe principal — sempre visível, sempre mudo */
-  .iframe-main {
-    position:absolute; inset:0; width:100%; height:100%;
-    border:none; z-index:1;
-  }
-
-  /* iframe de áudio — invisível, sobreposto, sem mute */
-  .iframe-audio {
-    position:absolute; inset:0; width:100%; height:100%;
-    border:none; z-index:2; opacity:0; pointer-events:none;
-  }
-
+  .iframe-main { position:absolute; inset:0; width:100%; height:100%; border:none; z-index:1; }
   .player-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 55%,rgba(0,0,0,0.5) 100%); pointer-events:none; z-index:3; }
 
-  /* capa de carregamento */
-  .player-cover {
-    position:absolute; inset:0; background:var(--bg);
-    z-index:5; display:flex; align-items:center; justify-content:center;
-    transition:opacity 0.8s ease; pointer-events:none;
-  }
+  .player-cover { position:absolute; inset:0; background:var(--bg); z-index:5; display:flex; align-items:center; justify-content:center; transition:opacity 0.8s ease; pointer-events:none; }
   .player-cover svg { width:24px; height:24px; fill:none; stroke:var(--accent); stroke-width:1.5; stroke-linecap:round; }
 
   .ph { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#080a0b; z-index:1; }
   .ph svg { width:26px; height:26px; fill:none; stroke:var(--text-dim); stroke-width:1.5; stroke-linecap:round; }
   .ph span { font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:.06em; }
+
+  /* Botão de refresh individual no canto do player */
+  .btn-card-refresh {
+    position:absolute; bottom:8px; right:8px; z-index:4;
+    width:28px; height:28px; border-radius:50%;
+    background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.15);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all .2s; backdrop-filter:blur(4px);
+  }
+  .btn-card-refresh:hover { background:rgba(29,158,117,0.3); border-color:var(--accent); }
+  .btn-card-refresh svg { width:12px; height:12px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; }
+  .btn-card-refresh.loading svg { animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 
   .badge { position:absolute; font-family:var(--mono); font-size:10px; letter-spacing:.08em; padding:2px 8px; border-radius:3px; display:none; align-items:center; gap:5px; pointer-events:none; z-index:4; top:8px; left:8px; }
   .badge-live     { background:var(--red); color:#fff; }
@@ -189,9 +185,9 @@
         <svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>
         Ouvir todos
       </button>
-      <button class="btn-hdr" id="btnRefresh" onclick="atualizarLives()">
+      <button class="btn-hdr" id="btnRefresh" onclick="atualizarTodos()">
         <svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>
-        Atualizar
+        Atualizar todos
       </button>
     </div>
   </header>
@@ -243,57 +239,81 @@ const dados    = {};
 // SVGs
 // ═══════════════════════════════════════
 const I = {
-  ouvir: `<svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>`,
-  mudo:  `<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M17 3l4 4-8 8H9v-4L17 3z"/></svg>`,
-  ext:   `<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>`,
-  off:   `<svg viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
-  spin:  `<svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>`,
+  ouvir:   `<svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>`,
+  mudo:    `<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M17 3l4 4-8 8H9v-4L17 3z"/></svg>`,
+  ext:     `<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>`,
+  off:     `<svg viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
+  spin:    `<svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>`,
+  refresh: `<svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>`,
 };
 
 // ═══════════════════════════════════════
-// URL dos iframes
+// URLs dos iframes
 // ═══════════════════════════════════════
 function srcMudo(videoId) {
-  // mute=1 na URL — Chrome permite autoplay, YouTube não exibe banner
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`;
 }
-
 function srcAudio(videoId) {
-  // sem mute — para o iframe de áudio invisível
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
 }
 
 // ═══════════════════════════════════════
-// API YouTube Data v3 com rodízio + anti-cache
+// API YouTube Data v3
 // ═══════════════════════════════════════
-async function apiSearch(channelId, eventType) {
-  const ts = Date.now(); // anti-cache
+async function apiCall(url) {
+  const ts = Date.now();
   for (let t = 0; t < API_KEYS.length; t++) {
     const key = API_KEYS[keyIdx % API_KEYS.length];
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=${eventType}&type=video&maxResults=1&key=${key}&_=${ts}`;
+    const fullUrl = `${url}&key=${key}&_=${ts}`;
     try {
-      const res  = await fetch(url, { cache: 'no-store' });
+      const res  = await fetch(fullUrl, { cache: 'no-store' });
       const data = await res.json();
       if (data.error) {
         if (data.error.code === 403) { keyIdx++; continue; }
         return null;
       }
-      if (data.items?.length) {
-        return { videoId: data.items[0].id.videoId, title: data.items[0].snippet.title };
-      }
-      return null;
+      return data;
     } catch(e) { return null; }
   }
   return null;
 }
 
+// Verifica o status real de um vídeo: 'live', 'upcoming' ou 'none'
+async function verificarStatusVideo(videoId) {
+  const data = await apiCall(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}`
+  );
+  if (!data?.items?.length) return 'none';
+  return data.items[0].snippet.liveBroadcastContent || 'none';
+}
+
+// Busca live ou upcoming e verifica status real — nunca retorna live anterior
+async function buscarEventType(channelId, eventType) {
+  const data = await apiCall(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=${eventType}&type=video&maxResults=1`
+  );
+  if (!data?.items?.length) return null;
+
+  const item    = data.items[0];
+  const videoId = item.id.videoId;
+  const title   = item.snippet.title;
+
+  // Verifica o status real do vídeo para evitar lives encerradas
+  const status = await verificarStatusVideo(videoId);
+  if (status === 'none') return null; // ignora lives encerradas
+
+  return { videoId, title, type: status };
+}
+
 async function buscarCanal(ch) {
-  const [live, upcoming] = await Promise.all([
-    apiSearch(ch.cid, 'live'),
-    apiSearch(ch.cid, 'upcoming'),
-  ]);
-  if (live?.videoId)     return { videoId: live.videoId,     title: live.title,     type: 'live' };
-  if (upcoming?.videoId) return { videoId: upcoming.videoId, title: upcoming.title, type: 'upcoming' };
+  // Prioridade 1: live ao vivo agora
+  const live = await buscarEventType(ch.cid, 'live');
+  if (live) return live;
+
+  // Prioridade 2: próxima live agendada
+  const upcoming = await buscarEventType(ch.cid, 'upcoming');
+  if (upcoming) return upcoming;
+
   return { videoId: null, title: '', type: null };
 }
 
@@ -327,18 +347,41 @@ async function iniciar() {
   }
 }
 
-async function atualizarLives() {
+// Atualiza todos os canais
+async function atualizarTodos() {
   const btn = document.getElementById('btnRefresh');
   if (btn) { btn.disabled = true; btn.innerHTML = I.spin + ' Buscando...'; }
   ouvidoId = null; todosAtivo = false;
   const btnT = document.getElementById('btnTodos');
   if (btnT) { btnT.classList.remove('ativo'); btnT.innerHTML = I.ouvir + ' Ouvir todos'; }
+  CHANNELS.forEach(ch => desativarAudio(ch.id));
   try {
     await buscarTodos();
     renderGrid();
     atualizarStatus();
   } catch(e) { setStatus('Erro ao atualizar. Tente novamente.'); }
-  if (btn) { btn.disabled = false; btn.innerHTML = I.spin + ' Atualizar'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = I.spin + ' Atualizar todos'; }
+}
+
+// Atualiza um canal individual
+async function atualizarCard(chId) {
+  const btn = document.getElementById('crefresh-' + chId);
+  if (btn) btn.classList.add('loading');
+
+  // Para o áudio se esse canal estava sendo ouvido
+  if (ouvidoId === chId) { desativarAudio(chId); ouvidoId = null; }
+
+  const ch = CHANNELS.find(c => c.id === chId);
+  if (!ch) return;
+
+  const resultado = await buscarCanal(ch);
+  dados[chId] = resultado;
+
+  // Atualiza o player desse card
+  atualizarPlayerCard(chId);
+  atualizarStatus();
+
+  if (btn) btn.classList.remove('loading');
 }
 
 // ═══════════════════════════════════════
@@ -349,68 +392,154 @@ function renderGrid() {
   grid.innerHTML = '';
   ouvidoId = null; todosAtivo = false;
 
-  CHANNELS.forEach(ch => {
-    const d    = dados[ch.id] || {};
-    const vid  = d.videoId;
-    const type = d.type;
-    const ttl  = d.title || '';
-    const segs = Array.from({length:10},(_,i)=>`<div class="vol-seg" id="seg-${ch.id}-${i}"></div>`).join('');
+  CHANNELS.forEach(ch => buildCard(ch));
 
-    const card = document.createElement('div');
-    card.className = 'channel-card';
-    card.id = 'card-' + ch.id;
-
-    card.innerHTML = `
-      <div class="player-wrapper" id="wrap-${ch.id}">
-        ${vid ? `
-          <!-- iframe principal: sempre visível, sempre mudo, nunca recarrega -->
-          <iframe class="iframe-main" id="main-${ch.id}"
-            src="${srcMudo(vid)}"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen></iframe>
-          <!-- iframe de áudio: invisível, criado/destruído ao clicar Ouvir -->
-          <div id="audio-slot-${ch.id}" style="position:absolute;inset:0;z-index:2;pointer-events:none;"></div>
-        ` : `<div class="ph">${I.off}<span>SEM TRANSMISSÃO</span></div>`}
-        <div class="player-overlay"></div>
-        <div class="badge badge-live" id="blive-${ch.id}" style="${type==='live'?'display:flex':''}">
-          <span class="dot"></span> LIVE
-        </div>
-        <div class="badge badge-upcoming" id="bup-${ch.id}" style="${type==='upcoming'?'display:flex':''}">
-          ⏰ AGENDADO
-        </div>
-        <div class="badge-muted" id="bmuted-${ch.id}" style="${!vid?'display:none':''}">MUDO</div>
-        ${vid ? `<div class="player-cover" id="cover-${ch.id}">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
-        </div>` : ''}
-      </div>
-      <div class="card-info">
-        <div class="card-header">
-          <div class="card-title">${ch.label}</div>
-          <div class="card-shift">${turnoAtivo}</div>
-        </div>
-        ${ttl ? `<div class="card-vtitle" title="${ttl}">${ttl}</div>` : ''}
-        <div class="vol-bar"><div class="vol-label">VOL</div><div class="vol-segs">${segs}</div></div>
-        <button class="btn-listen" id="btn-${ch.id}" onclick="ouvirCanal('${ch.id}')" ${!vid?'disabled':''}>
-          ${vid ? I.mudo+' Ouvir' : I.off+' Sem transmissão'}
-        </button>
-        <a class="yt-link ${!vid?'off':''}" href="${vid?'https://www.youtube.com/watch?v='+vid:'#'}" target="_blank">
-          ${I.ext} Abrir no YouTube
-        </a>
-      </div>`;
-
-    grid.appendChild(card);
-  });
-
-  // Remove capas após 4s — tempo para o YouTube iniciar o stream
+  // Remove capas após 4s
   setTimeout(() => {
-    CHANNELS.forEach(ch => {
-      const cover = document.getElementById('cover-' + ch.id);
-      if (cover) {
-        cover.style.opacity = '0';
-        setTimeout(() => cover.remove(), 800);
-      }
-    });
+    CHANNELS.forEach(ch => removerCover(ch.id));
   }, 4000);
+}
+
+function buildCard(ch) {
+  const grid = document.getElementById('grid');
+  const d    = dados[ch.id] || {};
+  const vid  = d.videoId;
+  const type = d.type;
+  const ttl  = d.title || '';
+  const segs = Array.from({length:10},(_,i)=>`<div class="vol-seg" id="seg-${ch.id}-${i}"></div>`).join('');
+
+  const card = document.createElement('div');
+  card.className = 'channel-card';
+  card.id = 'card-' + ch.id;
+
+  card.innerHTML = `
+    <div class="player-wrapper" id="wrap-${ch.id}">
+      ${vid ? `
+        <iframe class="iframe-main" id="main-${ch.id}"
+          src="${srcMudo(vid)}"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen></iframe>
+        <div id="audio-slot-${ch.id}" style="position:absolute;inset:0;z-index:2;pointer-events:none;"></div>
+        <div class="player-cover" id="cover-${ch.id}">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+        </div>
+      ` : `<div class="ph">${I.off}<span>SEM TRANSMISSÃO</span></div>`}
+      <div class="player-overlay"></div>
+      <div class="badge badge-live" id="blive-${ch.id}" style="${type==='live'?'display:flex':''}">
+        <span class="dot"></span> LIVE
+      </div>
+      <div class="badge badge-upcoming" id="bup-${ch.id}" style="${type==='upcoming'?'display:flex':''}">
+        ⏰ AGENDADO
+      </div>
+      <div class="badge-muted" id="bmuted-${ch.id}" style="${!vid?'display:none':''}">MUDO</div>
+      <button class="btn-card-refresh" id="crefresh-${ch.id}" onclick="atualizarCard('${ch.id}')" title="Atualizar este canal">
+        ${I.refresh}
+      </button>
+    </div>
+    <div class="card-info">
+      <div class="card-header">
+        <div class="card-title">${ch.label}</div>
+        <div class="card-shift">${turnoAtivo}</div>
+      </div>
+      ${ttl ? `<div class="card-vtitle" id="vtitle-${ch.id}" title="${ttl}">${ttl}</div>` : `<div class="card-vtitle" id="vtitle-${ch.id}"></div>`}
+      <div class="vol-bar"><div class="vol-label">VOL</div><div class="vol-segs">${segs}</div></div>
+      <button class="btn-listen" id="btn-${ch.id}" onclick="ouvirCanal('${ch.id}')" ${!vid?'disabled':''}>
+        ${vid ? I.mudo+' Ouvir' : I.off+' Sem transmissão'}
+      </button>
+      <a class="yt-link ${!vid?'off':''}" id="ytlink-${ch.id}" href="${vid?'https://www.youtube.com/watch?v='+vid:'#'}" target="_blank">
+        ${I.ext} Abrir no YouTube
+      </a>
+    </div>`;
+
+  grid.appendChild(card);
+}
+
+// Atualiza apenas o player de um card já existente
+function atualizarPlayerCard(chId) {
+  const d    = dados[chId] || {};
+  const vid  = d.videoId;
+  const type = d.type;
+  const ttl  = d.title || '';
+  const wrap = document.getElementById('wrap-' + chId);
+  if (!wrap) return;
+
+  // Remove iframe e placeholder antigos
+  const oldMain  = document.getElementById('main-' + chId);
+  const oldSlot  = document.getElementById('audio-slot-' + chId);
+  const oldCover = document.getElementById('cover-' + chId);
+  const oldPh    = wrap.querySelector('.ph');
+  if (oldMain)  oldMain.remove();
+  if (oldSlot)  oldSlot.remove();
+  if (oldCover) oldCover.remove();
+  if (oldPh)    oldPh.remove();
+
+  if (vid) {
+    // Cria novo iframe principal
+    const iframe = document.createElement('iframe');
+    iframe.className = 'iframe-main';
+    iframe.id = 'main-' + chId;
+    iframe.src = srcMudo(vid);
+    iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+    iframe.allowFullscreen = true;
+
+    const slot = document.createElement('div');
+    slot.id = 'audio-slot-' + chId;
+    slot.style.cssText = 'position:absolute;inset:0;z-index:2;pointer-events:none;';
+
+    const cover = document.createElement('div');
+    cover.className = 'player-cover';
+    cover.id = 'cover-' + chId;
+    cover.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>`;
+
+    const overlay = wrap.querySelector('.player-overlay');
+    wrap.insertBefore(iframe, overlay);
+    wrap.insertBefore(slot, overlay);
+    wrap.insertBefore(cover, overlay);
+
+    setTimeout(() => removerCover(chId), 4000);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'ph';
+    ph.innerHTML = `${I.off}<span>SEM TRANSMISSÃO</span>`;
+    const overlay = wrap.querySelector('.player-overlay');
+    wrap.insertBefore(ph, overlay);
+  }
+
+  // Atualiza badges
+  const blive = document.getElementById('blive-' + chId);
+  const bup   = document.getElementById('bup-'   + chId);
+  const bmut  = document.getElementById('bmuted-'+ chId);
+  if (blive) blive.style.display = type === 'live'     ? 'flex' : '';
+  if (bup)   bup.style.display   = type === 'upcoming' ? 'flex' : '';
+  if (bmut)  bmut.style.display  = !vid ? 'none' : '';
+
+  // Atualiza título e link
+  const vtitle = document.getElementById('vtitle-' + chId);
+  if (vtitle) { vtitle.textContent = ttl; vtitle.title = ttl; }
+  const ytlink = document.getElementById('ytlink-' + chId);
+  if (ytlink) {
+    ytlink.href = vid ? 'https://www.youtube.com/watch?v=' + vid : '#';
+    ytlink.classList.toggle('off', !vid);
+  }
+
+  // Atualiza botão ouvir
+  const btn = document.getElementById('btn-' + chId);
+  if (btn) {
+    btn.disabled = !vid;
+    btn.className = 'btn-listen';
+    btn.innerHTML = vid ? I.mudo+' Ouvir' : I.off+' Sem transmissão';
+  }
+
+  // Atualiza visual
+  atualizarVisual(chId, null);
+}
+
+function removerCover(chId) {
+  const cover = document.getElementById('cover-' + chId);
+  if (cover) {
+    cover.style.opacity = '0';
+    setTimeout(() => { if (cover.parentNode) cover.remove(); }, 800);
+  }
 }
 
 // ═══════════════════════════════════════
@@ -420,21 +549,18 @@ function ativarAudio(chId) {
   const vid  = dados[chId]?.videoId;
   const slot = document.getElementById('audio-slot-' + chId);
   if (!vid || !slot) return;
-
-  // Cria iframe de áudio invisível
+  if (document.getElementById('audio-' + chId)) return; // já existe
   const iframe = document.createElement('iframe');
-  iframe.id = 'audio-' + chId;
-  iframe.className = 'iframe-audio';
+  iframe.id  = 'audio-' + chId;
   iframe.src = srcAudio(vid);
   iframe.allow = 'autoplay; encrypted-media';
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;pointer-events:none;';
   slot.appendChild(iframe);
 }
 
 function desativarAudio(chId) {
-  const slot = document.getElementById('audio-slot-' + chId);
-  if (!slot) return;
-  const iframe = document.getElementById('audio-' + chId);
-  if (iframe) iframe.remove();
+  const el = document.getElementById('audio-' + chId);
+  if (el) el.remove();
 }
 
 function ouvirCanal(id) {
@@ -444,31 +570,21 @@ function ouvirCanal(id) {
     todosAtivo = false;
     const btnT = document.getElementById('btnTodos');
     if (btnT) { btnT.classList.remove('ativo'); btnT.innerHTML = I.ouvir + ' Ouvir todos'; }
-    // Para todos os áudios
     CHANNELS.forEach(ch => { if (ch.id !== id) desativarAudio(ch.id); });
   }
 
   const anterior = ouvidoId;
   ouvidoId = (ouvidoId === id) ? null : id;
 
-  // Para o áudio do canal anterior
-  if (anterior && anterior !== ouvidoId) desativarAudio(anterior);
+  if (anterior && anterior !== ouvidoId) {
+    desativarAudio(anterior);
+    atualizarVisual(anterior, null);
+  }
 
-  // Ativa ou desativa o canal clicado
   if (ouvidoId) {
     ativarAudio(ouvidoId);
     atualizarVisual(ouvidoId, 'single');
   }
-  if (anterior && anterior !== ouvidoId) {
-    atualizarVisual(anterior, null);
-  }
-
-  // Atualiza todos os outros
-  CHANNELS.forEach(ch => {
-    if (ch.id !== ouvidoId && ch.id !== anterior) {
-      atualizarVisual(ch.id, null);
-    }
-  });
 
   const ch = ouvidoId ? CHANNELS.find(c => c.id === ouvidoId) : null;
   setStatus(ch
@@ -507,10 +623,8 @@ function atualizarVisual(chId, modo) {
   const card = document.getElementById('card-' + chId);
   const btn  = document.getElementById('btn-'  + chId);
   if (!card || !btn) return;
-
   card.classList.remove('listening', 'listen-all');
   btn.classList.remove('s-active', 'a-active');
-
   if (modo === 'single') {
     card.classList.add('listening');
     btn.className = 'btn-listen s-active';
@@ -520,10 +634,10 @@ function atualizarVisual(chId, modo) {
     btn.className = 'btn-listen a-active';
     btn.innerHTML = I.ouvir + ' Ouvindo';
   } else {
-    btn.className = 'btn-listen';
-    btn.innerHTML = I.mudo + ' Ouvir';
+    btn.className = 'btn-listen' + (!dados[chId]?.videoId ? '' : '');
+    btn.disabled  = !dados[chId]?.videoId;
+    btn.innerHTML = dados[chId]?.videoId ? I.mudo+' Ouvir' : I.off+' Sem transmissão';
   }
-
   const on = (modo === 'single' || modo === 'all');
   for (let i = 0; i < 10; i++) {
     const s = document.getElementById(`seg-${chId}-${i}`);
