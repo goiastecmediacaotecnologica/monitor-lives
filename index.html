@@ -342,7 +342,11 @@ function renderGrid() {
           ? `<iframe id="iframe-${ch.id}"
                src="${iframeSrc(vid, true)}"
                allow="autoplay; encrypted-media; picture-in-picture"
-               allowfullscreen></iframe>`
+               allowfullscreen
+               ></iframe>
+             <div id="cover-${ch.id}" style="position:absolute;inset:0;background:#0d0f11;z-index:4;transition:opacity 0.8s ease;pointer-events:none;display:flex;align-items:center;justify-content:center;">
+               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d9e75" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg>
+             </div>`
           : `<div class="ph" id="ph-${ch.id}">${I.off}<span>SEM TRANSMISSÃO</span></div>`
         }
         <div class="player-overlay"></div>
@@ -371,6 +375,17 @@ function renderGrid() {
 
     grid.appendChild(card);
   });
+
+  // Remove as capas após 4s — tempo suficiente para o YouTube iniciar o vídeo
+  setTimeout(() => {
+    CHANNELS.forEach(ch => {
+      const cover = document.getElementById('cover-' + ch.id);
+      if (cover) {
+        cover.style.opacity = '0';
+        setTimeout(() => { if (cover.parentNode) cover.remove(); }, 800);
+      }
+    });
+  }, 4000);
 }
 
 // ═══════════════════════════════════════
