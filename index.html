@@ -15,6 +15,7 @@
     --accent-dim: rgba(29,158,117,0.12);
     --accent-glow: rgba(29,158,117,0.22);
     --red: #e24b4a;
+    --amber: #f59e0b;
     --text: #e8e8e6;
     --text-muted: #6b6f72;
     --text-dim: #3a3d40;
@@ -49,14 +50,18 @@
   .logo-icon svg { width:15px; height:15px; fill:none; stroke:var(--accent); stroke-width:2; stroke-linecap:round; }
   .logo-text { font-family:var(--mono); font-size:13px; letter-spacing:.04em; }
   .logo-sub { font-size:10px; color:var(--text-muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.08em; }
-  .header-right { display:flex; align-items:center; gap:14px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
   .live-pill { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--red); letter-spacing:.1em; }
   .live-dot { width:7px; height:7px; border-radius:50%; background:var(--red); animation:blink 1.4s infinite; }
   .clock { font-family:var(--mono); font-size:14px; color:var(--text-muted); letter-spacing:.05em; }
-  .btn-refresh { font-family:var(--mono); font-size:11px; color:var(--text-dim); background:transparent; border:1px solid var(--border); border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
-  .btn-refresh:hover { color:var(--accent); border-color:var(--accent); }
-  .btn-refresh:disabled { opacity:0.4; cursor:not-allowed; }
-  .btn-refresh svg { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+
+  .btn-header { font-family:var(--mono); font-size:11px; color:var(--text-dim); background:transparent; border:1px solid var(--border); border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .btn-header:hover { color:var(--accent); border-color:var(--accent); }
+  .btn-header:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-header svg { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  .btn-header.ouvir-todos { border-color:var(--amber); color:var(--amber); }
+  .btn-header.ouvir-todos:hover { background:rgba(245,158,11,0.1); }
+  .btn-header.ouvir-todos.ativo { background:rgba(245,158,11,0.15); }
 
   .turno-bar { display:flex; align-items:center; padding:10px 22px; border-bottom:1px solid var(--border); background:var(--surface); }
   .turno-label { font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:.12em; text-transform:uppercase; margin-right:14px; }
@@ -77,6 +82,7 @@
 
   .channel-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; transition:border-color .2s, box-shadow .2s; }
   .channel-card.listening { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-glow),0 0 20px var(--accent-glow); }
+  .channel-card.listening-all { border-color:var(--amber); box-shadow:0 0 0 1px rgba(245,158,11,0.25),0 0 20px rgba(245,158,11,0.15); }
 
   .player-wrapper { position:relative; width:100%; padding-top:56.25%; background:#000; overflow:hidden; }
   .player-wrapper iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
@@ -90,8 +96,10 @@
 
   .badge-live { position:absolute; top:8px; left:8px; background:var(--red); color:#fff; font-family:var(--mono); font-size:10px; letter-spacing:.08em; padding:2px 8px; border-radius:3px; display:none; align-items:center; gap:5px; pointer-events:none; }
   .badge-live .dot { width:5px; height:5px; border-radius:50%; background:#fff; animation:blink 1.4s infinite; }
+  .badge-upcoming { position:absolute; top:8px; left:8px; background:var(--amber); color:#000; font-family:var(--mono); font-size:10px; letter-spacing:.08em; padding:2px 8px; border-radius:3px; display:none; align-items:center; gap:5px; pointer-events:none; font-weight:500; }
   .badge-muted { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.65); color:var(--text-muted); font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:3px; pointer-events:none; transition:opacity .2s; }
-  .channel-card.listening .badge-muted { opacity:0; }
+  .channel-card.listening .badge-muted,
+  .channel-card.listening-all .badge-muted { opacity:0; }
 
   .card-info { padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; }
   .card-header { display:flex; align-items:flex-start; justify-content:space-between; }
@@ -103,12 +111,16 @@
   .vol-label { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.06em; width:20px; }
   .vol-segs { display:flex; gap:2px; flex:1; }
   .vol-seg { flex:1; height:7px; border-radius:1px; background:var(--surface2); border:1px solid var(--text-dim); transition:all .25s; }
-  .channel-card.listening .vol-seg { border-color:var(--accent); }
+  .channel-card.listening .vol-seg,
+  .channel-card.listening-all .vol-seg { border-color:var(--accent); }
+  .channel-card.listening-all .vol-seg { border-color:var(--amber); }
   .channel-card.listening .vol-seg.on { background:var(--accent); }
+  .channel-card.listening-all .vol-seg.on { background:var(--amber); }
 
   .btn-listen { width:100%; padding:7px 0; border-radius:5px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-family:var(--mono); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; letter-spacing:.04em; }
   .btn-listen:hover:not(:disabled) { background:var(--surface2); color:var(--text); }
   .btn-listen.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-weight:500; }
+  .btn-listen.active-all { background:rgba(245,158,11,0.1); border-color:var(--amber); color:var(--amber); font-weight:500; }
   .btn-listen:disabled { opacity:.3; cursor:not-allowed; }
   .btn-listen svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
@@ -156,7 +168,11 @@
     <div class="header-right">
       <div class="live-pill"><div class="live-dot"></div>AO VIVO</div>
       <div class="clock" id="clock">--:--:--</div>
-      <button class="btn-refresh" id="btnRefresh" onclick="atualizarLives()">
+      <button class="btn-header ouvir-todos" id="btnOuvirTodos" onclick="toggleOuvirTodos()">
+        <svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>
+        Ouvir todos
+      </button>
+      <button class="btn-header" id="btnRefresh" onclick="atualizarLives()">
         <svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>
         Atualizar
       </button>
@@ -175,14 +191,26 @@
       <div class="status-dot"></div>
       <span id="statusText">—</span>
     </div>
-    <div class="status-right" id="statusRight">Sem limite de cota — via RSS</div>
+    <div class="status-right" id="statusRight"></div>
   </div>
 
   <div class="grid" id="grid"></div>
-  <footer>Centro de Mídias — Monitor de transmissões ao vivo &nbsp;|&nbsp; Via RSS · Sem limite de uso</footer>
+  <footer>Centro de Mídias — Monitor de transmissões ao vivo &nbsp;|&nbsp; RSS + API backup · 3 projetos em rodízio</footer>
 </div>
 
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
+// ─────────────────────────────────────────
+// CONFIGURAÇÃO
+// ─────────────────────────────────────────
+const API_KEYS = [
+  'AIzaSyCe3wlSYD6SUiekWxkeIi1671DQF8lUxcI',
+  'AIzaSyAT0YcuBbmENdFtd2bW7jfxKb5DEkFjCLs',
+  'AIzaSyDf-YvG0LnOMK8f-TqU8yhvRNXg2LSJTAw',
+];
+let apiKeyIndex = 0;
+
 const CHANNELS = [
   { id: 'ch1', label: '8º Ano',   channelId: 'UCB0MTJaJAkX4cKC9vhcFNvw' },
   { id: 'ch2', label: '9º Ano',   channelId: 'UCJim7HUhrxwZTP_7zCDUWeg' },
@@ -191,21 +219,152 @@ const CHANNELS = [
   { id: 'ch5', label: '3ª Série', channelId: 'UC3MKYCEnPR1NDayp7TQwMmg' },
 ];
 
-// Proxy público para contornar CORS no RSS
 const PROXY = 'https://api.allorigins.win/get?url=';
 
-let turnoAtivo = 'Matutino';
-let ouvidoId   = null;
-const videoIds  = {};
-const videoTitles = {};
+// ─────────────────────────────────────────
+// ESTADO
+// ─────────────────────────────────────────
+let turnoAtivo   = 'Matutino';
+let ouvidoId     = null;
+let ouvirTodosAtivo = false;
+const videoIds   = {};
+const videoTitles= {};
+const videoTypes = {}; // 'live' | 'upcoming' | null
+const ytPlayers  = {}; // IFrame API players
+let iframeApiReady = false;
+const pendingPlayers = []; // players aguardando API pronta
 
+// ─────────────────────────────────────────
+// SVGs
+// ─────────────────────────────────────────
 const SVG_OUVIR = `<svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>`;
 const SVG_MUDO  = `<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M17 3l4 4-8 8H9v-4L17 3z"/></svg>`;
 const SVG_EXT   = `<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>`;
 const SVG_OFF   = `<svg viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`;
 const SVG_SPIN  = `<svg viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 15a8 8 0 1 0 .29-4.88"/></svg>`;
+const SVG_ALL   = `<svg viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12"/><circle cx="9" cy="12" r="2"/></svg>`;
 
-// ── Inicialização ──
+// ─────────────────────────────────────────
+// YouTube IFrame API
+// ─────────────────────────────────────────
+function onYouTubeIframeAPIReady() {
+  iframeApiReady = true;
+  pendingPlayers.forEach(fn => fn());
+  pendingPlayers.length = 0;
+}
+
+function criarPlayer(chId, videoId, muted) {
+  const wrap = document.getElementById('wrap-' + chId);
+  if (!wrap) return;
+
+  // Remove placeholder e iframe existente
+  const ph = document.getElementById('ph-' + chId);
+  if (ph) ph.remove();
+  const old = document.getElementById('player-' + chId);
+  if (old) old.remove();
+
+  // Cria div alvo para o player
+  const div = document.createElement('div');
+  div.id = 'player-' + chId;
+  div.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  wrap.insertBefore(div, wrap.firstChild);
+
+  const criar = () => {
+    ytPlayers[chId] = new YT.Player('player-' + chId, {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: muted ? 1 : 0,
+        rel: 0,
+        modestbranding: 1,
+        playsinline: 1,
+      },
+      events: {
+        onReady: (e) => {
+          if (muted) e.target.mute();
+          else e.target.unMute();
+        }
+      }
+    });
+  };
+
+  if (iframeApiReady) criar();
+  else pendingPlayers.push(criar);
+}
+
+// ─────────────────────────────────────────
+// Busca RSS
+// ─────────────────────────────────────────
+async function buscarRSS(channelId) {
+  try {
+    const rssUrl   = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+    const proxyUrl = PROXY + encodeURIComponent(rssUrl);
+    const res  = await fetch(proxyUrl);
+    const json = await res.json();
+    const xml  = new DOMParser().parseFromString(json.contents, 'text/xml');
+    const entries = xml.querySelectorAll('entry');
+    if (!entries.length) return null;
+    const first   = entries[0];
+    const videoId = first.querySelector('videoId')?.textContent
+                    || first.querySelector('id')?.textContent?.split(':').pop();
+    const title   = first.querySelector('title')?.textContent || '';
+    if (!videoId) return null;
+    return { videoId, title };
+  } catch(e) { return null; }
+}
+
+// ─────────────────────────────────────────
+// Busca API (live ou upcoming) com rodízio
+// ─────────────────────────────────────────
+async function buscarAPI(channelId, eventType) {
+  for (let tentativa = 0; tentativa < API_KEYS.length; tentativa++) {
+    const key = API_KEYS[apiKeyIndex % API_KEYS.length];
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=${eventType}&type=video&key=${key}`;
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (data.error) {
+        if (data.error.code === 403) {
+          // cota esgotada — tenta próxima chave
+          apiKeyIndex++;
+          continue;
+        }
+        return null;
+      }
+      if (data.items && data.items.length > 0) {
+        return {
+          videoId: data.items[0].id.videoId,
+          title:   data.items[0].snippet.title,
+        };
+      }
+      return null;
+    } catch(e) { return null; }
+  }
+  return null; // todas as chaves esgotadas
+}
+
+// ─────────────────────────────────────────
+// Busca principal: RSS → API live → API upcoming
+// ─────────────────────────────────────────
+async function buscarCanal(channelId) {
+  // 1. RSS
+  const rss = await buscarRSS(channelId);
+  if (rss) return { ...rss, type: 'live' };
+
+  // 2. API live
+  const apiLive = await buscarAPI(channelId, 'live');
+  if (apiLive) return { ...apiLive, type: 'live' };
+
+  // 3. API upcoming
+  const apiUpcoming = await buscarAPI(channelId, 'upcoming');
+  if (apiUpcoming) return { ...apiUpcoming, type: 'upcoming' };
+
+  return null;
+}
+
+// ─────────────────────────────────────────
+// Inicialização
+// ─────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', iniciar);
 
 async function iniciar() {
@@ -215,66 +374,39 @@ async function iniciar() {
   await buscarTodasLives(true);
 }
 
-// ── RSS ──
-async function buscarLiveRSS(channelId) {
-  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-  const proxyUrl = PROXY + encodeURIComponent(rssUrl);
-
-  const res  = await fetch(proxyUrl);
-  const json = await res.json();
-  const xml  = new DOMParser().parseFromString(json.contents, 'text/xml');
-
-  const entries = xml.querySelectorAll('entry');
-  if (!entries.length) return null;
-
-  // Pega o vídeo mais recente
-  const first   = entries[0];
-  const videoId = first.querySelector('videoId')?.textContent
-                  || first.querySelector('id')?.textContent?.split(':').pop();
-  const title   = first.querySelector('title')?.textContent || '';
-
-  if (!videoId) return null;
-  return { videoId, title };
-}
-
 async function buscarTodasLives(primeiraVez = false) {
   const btn = document.getElementById('btnRefresh');
   if (btn) { btn.disabled = true; btn.innerHTML = SVG_SPIN + ' Buscando...'; }
 
+  // Reset estado de ouvir
+  ouvidoId = null;
+  ouvirTodosAtivo = false;
+  const btnTodos = document.getElementById('btnOuvirTodos');
+  if (btnTodos) { btnTodos.classList.remove('ativo'); btnTodos.innerHTML = SVG_ALL + ' Ouvir todos'; }
+
   let encontrados = 0;
-  let erros = 0;
 
   for (let i = 0; i < CHANNELS.length; i++) {
     const ch = CHANNELS[i];
     setProgress(10 + ((i + 1) / CHANNELS.length) * 80);
     if (!primeiraVez) setPlaceholder(ch.id, 'loading');
 
-    try {
-      const result = await buscarLiveRSS(ch.channelId);
-      if (result) {
-        videoIds[ch.id]    = result.videoId;
-        videoTitles[ch.id] = result.title;
-        encontrados++;
-      } else {
-        videoIds[ch.id]    = null;
-        videoTitles[ch.id] = '';
-      }
-    } catch(e) {
+    const result = await buscarCanal(ch.channelId);
+    if (result) {
+      videoIds[ch.id]    = result.videoId;
+      videoTitles[ch.id] = result.title;
+      videoTypes[ch.id]  = result.type;
+      encontrados++;
+    } else {
       videoIds[ch.id]    = null;
       videoTitles[ch.id] = '';
-      erros++;
+      videoTypes[ch.id]  = null;
     }
   }
 
   setProgress(100);
 
   if (primeiraVez) {
-    if (erros === CHANNELS.length) {
-      document.getElementById('loadMsg').style.display = 'none';
-      document.getElementById('loadErrorMsg').textContent = 'Não foi possível acessar o RSS do YouTube. Verifique sua conexão e tente novamente.';
-      document.getElementById('loadError').style.display = 'block';
-      return;
-    }
     setTimeout(() => {
       document.getElementById('loading-screen').style.display = 'none';
       document.getElementById('monitor-screen').style.display = 'block';
@@ -282,8 +414,7 @@ async function buscarTodasLives(primeiraVez = false) {
       atualizarStatus(encontrados);
     }, 300);
   } else {
-    ouvidoId = null;
-    atualizarPlayers();
+    renderGrid();
     atualizarStatus(encontrados);
   }
 
@@ -291,31 +422,48 @@ async function buscarTodasLives(primeiraVez = false) {
 }
 
 async function atualizarLives() {
+  // Destroi players existentes
+  CHANNELS.forEach(ch => {
+    if (ytPlayers[ch.id]) {
+      try { ytPlayers[ch.id].destroy(); } catch(e) {}
+      delete ytPlayers[ch.id];
+    }
+  });
   await buscarTodasLives(false);
 }
 
-// ── Grid ──
+// ─────────────────────────────────────────
+// Grid
+// ─────────────────────────────────────────
 function renderGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
+
+  // Destroi players antigos
+  CHANNELS.forEach(ch => {
+    if (ytPlayers[ch.id]) {
+      try { ytPlayers[ch.id].destroy(); } catch(e) {}
+      delete ytPlayers[ch.id];
+    }
+  });
+
   CHANNELS.forEach(ch => {
     const vid   = videoIds[ch.id];
     const title = videoTitles[ch.id] || '';
+    const type  = videoTypes[ch.id];
     const card  = document.createElement('div');
     card.className = 'channel-card'; card.id = 'card-' + ch.id;
     const segs = Array.from({length:10},(_,i)=>`<div class="vol-seg" id="seg-${ch.id}-${i}"></div>`).join('');
 
     card.innerHTML = `
       <div class="player-wrapper" id="wrap-${ch.id}">
-        ${vid
-          ? `<iframe id="iframe-${ch.id}"
-               src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&rel=0&modestbranding=1"
-               allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-          : `<div class="ph" id="ph-${ch.id}">${SVG_OFF}<span>SEM VÍDEO</span></div>`
-        }
+        ${!vid ? `<div class="ph" id="ph-${ch.id}">${SVG_OFF}<span>SEM TRANSMISSÃO</span></div>` : ''}
         <div class="player-overlay"></div>
-        <div class="badge-live" id="badge-${ch.id}" style="${vid?'display:flex':'display:none'}">
+        <div class="badge-live" id="badge-live-${ch.id}" style="${type==='live'?'display:flex':'display:none'}">
           <span class="dot"></span> LIVE
+        </div>
+        <div class="badge-upcoming" id="badge-upcoming-${ch.id}" style="${type==='upcoming'?'display:flex':'display:none'}">
+          ⏰ AGENDADO
         </div>
         <div class="badge-muted" id="muted-${ch.id}" style="${vid?'':'display:none'}">MUDO</div>
       </div>
@@ -327,7 +475,7 @@ function renderGrid() {
         ${title ? `<div class="card-video-title" title="${title}">${title}</div>` : ''}
         <div class="vol-bar"><div class="vol-label">VOL</div><div class="vol-segs">${segs}</div></div>
         <button class="btn-listen" id="btn-${ch.id}" onclick="ouvirCanal('${ch.id}')" ${!vid?'disabled':''}>
-          ${vid ? SVG_MUDO+' Ouvir' : SVG_OFF+' Sem vídeo'}
+          ${vid ? SVG_MUDO+' Ouvir' : SVG_OFF+' Sem transmissão'}
         </button>
         <a class="yt-link ${vid?'':'disabled'}" id="link-${ch.id}"
            href="${vid?'https://www.youtube.com/watch?v='+vid:'#'}" target="_blank">
@@ -335,97 +483,129 @@ function renderGrid() {
         </a>
       </div>`;
     grid.appendChild(card);
-  });
-}
 
-function atualizarPlayers() {
-  CHANNELS.forEach(ch => {
-    const vid    = videoIds[ch.id];
-    const title  = videoTitles[ch.id] || '';
-    const muted  = ch.id !== ouvidoId;
-    const wrap   = document.getElementById('wrap-'  + ch.id);
-    const badge  = document.getElementById('badge-' + ch.id);
-    const mutedB = document.getElementById('muted-' + ch.id);
-    const btn    = document.getElementById('btn-'   + ch.id);
-    const link   = document.getElementById('link-'  + ch.id);
-    const card   = document.getElementById('card-'  + ch.id);
-    const titleEl= card?.querySelector('.card-video-title');
-    if (!wrap) return;
-
-    const old = document.getElementById('iframe-' + ch.id);
-    if (old) old.remove();
-    const ph = document.getElementById('ph-' + ch.id);
-    if (ph) ph.remove();
-
-    if (vid) {
-      const iframe = document.createElement('iframe');
-      iframe.id = 'iframe-' + ch.id;
-      iframe.src = `https://www.youtube.com/embed/${vid}?autoplay=1${muted?'&mute=1':''}&rel=0&modestbranding=1`;
-      iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
-      iframe.allowFullscreen = true;
-      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
-      wrap.insertBefore(iframe, wrap.firstChild);
-      if (badge) badge.style.display = 'flex';
-      if (mutedB) mutedB.style.display = '';
-      if (btn) { btn.disabled = false; btn.className = 'btn-listen'+(muted?'':' active'); btn.innerHTML = muted ? SVG_MUDO+' Ouvir' : SVG_OUVIR+' Ouvindo'; }
-      if (link) { link.href = 'https://www.youtube.com/watch?v='+vid; link.classList.remove('disabled'); }
-      if (titleEl) { titleEl.textContent = title; titleEl.title = title; }
-    } else {
-      const phDiv = document.createElement('div');
-      phDiv.className = 'ph'; phDiv.id = 'ph-' + ch.id;
-      phDiv.innerHTML = SVG_OFF + '<span>SEM VÍDEO</span>';
-      wrap.insertBefore(phDiv, wrap.firstChild);
-      if (badge) badge.style.display = 'none';
-      if (mutedB) mutedB.style.display = 'none';
-      if (btn) { btn.disabled = true; btn.className = 'btn-listen'; btn.innerHTML = SVG_OFF+' Sem vídeo'; }
-      if (link) { link.href = '#'; link.classList.add('disabled'); }
-      if (card && ouvidoId === ch.id) { card.classList.remove('listening'); ouvidoId = null; }
-      if (titleEl) titleEl.textContent = '';
-    }
-    atualizarVolBars(ch.id, ch.id === ouvidoId);
+    // Cria player via IFrame API (todos mutados inicialmente)
+    if (vid) criarPlayer(ch.id, vid, true);
   });
 }
 
 function setPlaceholder(chId, state) {
   const wrap = document.getElementById('wrap-' + chId);
   if (!wrap) return;
-  const old = document.getElementById('iframe-' + chId);
-  if (old) old.remove();
   let ph = document.getElementById('ph-' + chId);
-  if (!ph) { ph = document.createElement('div'); ph.id = 'ph-' + chId; wrap.insertBefore(ph, wrap.firstChild); }
-  ph.className = 'ph loading';
-  ph.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg><span>BUSCANDO...</span>`;
+  if (!ph) { ph = document.createElement('div'); ph.id = 'ph-' + chId; wrap.insertBefore(ph, wrap.querySelector('.player-overlay')); }
+  ph.className = 'ph' + (state === 'loading' ? ' loading' : '');
+  ph.innerHTML = state === 'loading'
+    ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4V8z"/></svg><span>BUSCANDO...</span>`
+    : SVG_OFF + '<span>SEM TRANSMISSÃO</span>';
 }
 
-// ── Áudio ──
+// ─────────────────────────────────────────
+// Controle de áudio — SEM recarregar iframe
+// ─────────────────────────────────────────
 function ouvirCanal(id) {
   if (!videoIds[id]) return;
+
+  // Se "ouvir todos" estiver ativo, desativa primeiro
+  if (ouvirTodosAtivo) desativarOuvirTodos(false);
+
   ouvidoId = (ouvidoId === id) ? null : id;
+
   CHANNELS.forEach(ch => {
     if (!videoIds[ch.id]) return;
-    const muted  = ch.id !== ouvidoId;
-    const card   = document.getElementById('card-'  + ch.id);
-    const btn    = document.getElementById('btn-'   + ch.id);
-    const iframe = document.getElementById('iframe-'+ ch.id);
-    if (card) card.classList.toggle('listening', !muted);
-    if (btn) { btn.className = 'btn-listen'+(muted?'':' active'); btn.innerHTML = muted ? SVG_MUDO+' Ouvir' : SVG_OUVIR+' Ouvindo'; }
-    if (iframe) iframe.src = `https://www.youtube.com/embed/${videoIds[ch.id]}?autoplay=1${muted?'&mute=1':''}&rel=0&modestbranding=1`;
-    atualizarVolBars(ch.id, !muted);
+    const muted = ch.id !== ouvidoId;
+    aplicarMute(ch.id, muted);
+    atualizarCardVisual(ch.id, muted ? null : 'single');
   });
+
   const ch = ouvidoId ? CHANNELS.find(c => c.id === ouvidoId) : null;
   setStatus(ch
     ? `▶ Ouvindo: ${ch.label} — ${turnoAtivo}. Os outros ${CHANNELS.length-1} canais com vídeo ativo e áudio mudo.`
     : 'Clique em "Ouvir" para monitorar o áudio. Os demais ficam mutados automaticamente.');
 }
 
-function atualizarVolBars(chId, ouvindo) {
+function toggleOuvirTodos() {
+  if (ouvirTodosAtivo) {
+    desativarOuvirTodos(true);
+  } else {
+    ativarOuvirTodos();
+  }
+}
+
+function ativarOuvirTodos() {
+  ouvirTodosAtivo = true;
+  ouvidoId = null;
+  const btn = document.getElementById('btnOuvirTodos');
+  if (btn) { btn.classList.add('ativo'); btn.innerHTML = SVG_ALL + ' Mutando todos'; }
+
+  CHANNELS.forEach(ch => {
+    if (!videoIds[ch.id]) return;
+    aplicarMute(ch.id, false); // desmuta todos
+    atualizarCardVisual(ch.id, 'all');
+  });
+
+  setStatus('▶ Ouvindo todos os canais simultaneamente. Use para comparar volumes.');
+  setTimeout(() => {
+    const btn = document.getElementById('btnOuvirTodos');
+    if (btn && ouvirTodosAtivo) btn.innerHTML = SVG_ALL + ' Parar todos';
+  }, 500);
+}
+
+function desativarOuvirTodos(resetStatus = true) {
+  ouvirTodosAtivo = false;
+  const btn = document.getElementById('btnOuvirTodos');
+  if (btn) { btn.classList.remove('ativo'); btn.innerHTML = SVG_ALL + ' Ouvir todos'; }
+
+  CHANNELS.forEach(ch => {
+    if (!videoIds[ch.id]) return;
+    aplicarMute(ch.id, true); // muta todos
+    atualizarCardVisual(ch.id, null);
+  });
+
+  if (resetStatus) setStatus('Clique em "Ouvir" para monitorar o áudio. Os demais ficam mutados automaticamente.');
+}
+
+function aplicarMute(chId, muted) {
+  const player = ytPlayers[chId];
+  if (!player) return;
+  try {
+    if (muted) player.mute();
+    else player.unMute();
+  } catch(e) {}
+}
+
+function atualizarCardVisual(chId, modo) {
+  // modo: 'single' | 'all' | null
+  const card = document.getElementById('card-' + chId);
+  const btn  = document.getElementById('btn-'  + chId);
+  if (!card || !btn) return;
+
+  card.classList.remove('listening', 'listening-all');
+  btn.classList.remove('active', 'active-all');
+
+  if (modo === 'single') {
+    card.classList.add('listening');
+    btn.className = 'btn-listen active';
+    btn.innerHTML = SVG_OUVIR + ' Ouvindo';
+  } else if (modo === 'all') {
+    card.classList.add('listening-all');
+    btn.className = 'btn-listen active-all';
+    btn.innerHTML = SVG_OUVIR + ' Ouvindo';
+  } else {
+    btn.className = 'btn-listen';
+    btn.innerHTML = SVG_MUDO + ' Ouvir';
+  }
+
+  const ouvindo = (modo === 'single' || modo === 'all');
   for (let i = 0; i < 10; i++) {
     const seg = document.getElementById(`seg-${chId}-${i}`);
     if (seg) seg.classList.toggle('on', ouvindo && i < 8);
   }
 }
 
-// ── UI ──
+// ─────────────────────────────────────────
+// UI helpers
+// ─────────────────────────────────────────
 function setStatus(msg) {
   const el = document.getElementById('statusText');
   if (el) el.textContent = msg;
@@ -433,13 +613,16 @@ function setStatus(msg) {
 
 function atualizarStatus(encontrados) {
   const agora = new Date().toLocaleTimeString('pt-BR');
-  document.getElementById('statusRight').textContent = `Última busca: ${agora} · RSS · Sem limite`;
-  const ch = ouvidoId ? CHANNELS.find(c => c.id === ouvidoId) : null;
+  const vivos = CHANNELS.filter(ch => videoTypes[ch.id] === 'live').length;
+  const agendados = CHANNELS.filter(ch => videoTypes[ch.id] === 'upcoming').length;
+  let info = '';
+  if (vivos > 0) info += `${vivos} ao vivo`;
+  if (agendados > 0) info += (info ? ' · ' : '') + `${agendados} agendado${agendados>1?'s':''}`;
+  if (!info) info = 'nenhuma transmissão';
+  document.getElementById('statusRight').textContent = `${agora} · ${info}`;
   setStatus(encontrados === 0
-    ? 'Nenhum vídeo encontrado. Os canais podem estar offline agora.'
-    : ch
-      ? `▶ Ouvindo: ${ch.label} — ${turnoAtivo}. ${encontrados} de ${CHANNELS.length} canais encontrados.`
-      : `${encontrados} de ${CHANNELS.length} canais com vídeo. Clique em "Ouvir" para monitorar.`);
+    ? 'Nenhuma transmissão encontrada. Clique em "Atualizar" quando as lives iniciarem.'
+    : `${encontrados} de ${CHANNELS.length} canais encontrados. Clique em "Ouvir" para monitorar.`);
 }
 
 function setProgress(pct) {
@@ -454,7 +637,9 @@ function setTurno(btn, nome) {
   document.querySelectorAll('.card-shift').forEach(el => el.textContent = nome);
 }
 
-// ── Relógio ──
+// ─────────────────────────────────────────
+// Relógio
+// ─────────────────────────────────────────
 setInterval(() => {
   const now = new Date();
   const el = document.getElementById('clock');
