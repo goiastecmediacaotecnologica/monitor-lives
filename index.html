@@ -87,6 +87,7 @@
 
   .player-wrapper { position:relative; width:100%; padding-top:56.25%; background:#000; overflow:hidden; }
   .player-wrapper > * { position:absolute; inset:0; width:100%; height:100%; }
+  .player-wrapper > div[id^="player-div"] { z-index:1; background:transparent; }
   .player-wrapper iframe { border:none; }
   .player-overlay { background:linear-gradient(to bottom,transparent 55%,rgba(0,0,0,0.5) 100%); pointer-events:none; z-index:2; }
 
@@ -101,6 +102,9 @@
   .badge-upcoming { background:var(--amber); color:#000; font-weight:500; }
   .badge-live .dot { width:5px; height:5px; border-radius:50%; background:#fff; animation:blink 1.4s infinite; }
   .badge-muted { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.7); color:var(--text-muted); font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:3px; pointer-events:none; z-index:3; transition:opacity .2s; }
+  /* Remove qualquer fundo escuro indevido sobre o player */
+  .player-wrapper .ph { z-index:1; }
+  .player-wrapper iframe, .player-wrapper > div[id^="player-div"] { z-index:1; }
   .channel-card.listening  .badge-muted,
   .channel-card.listen-all .badge-muted { opacity:0; }
 
@@ -312,15 +316,15 @@ async function apiSearch(channelId, eventType) {
   return null; // todas as chaves esgotadas
 }
 
-// Busca live e upcoming em paralelo para um canal
+// Busca live e upcoming em paralelo — live tem prioridade absoluta
 async function buscarCanal(ch) {
   const [live, upcoming] = await Promise.all([
     apiSearch(ch.cid, 'live'),
     apiSearch(ch.cid, 'upcoming'),
   ]);
 
-  if (live)     return { videoId: live.videoId,     title: live.title,     type: 'live' };
-  if (upcoming) return { videoId: upcoming.videoId, title: upcoming.title, type: 'upcoming' };
+  if (live?.videoId) return { videoId: live.videoId, title: live.title, type: 'live' };
+  if (upcoming?.videoId) return { videoId: upcoming.videoId, title: upcoming.title, type: 'upcoming' };
   return { videoId: null, title: '', type: null };
 }
 
